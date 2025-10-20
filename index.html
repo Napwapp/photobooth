@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Photobooth 3 Frame — 5x15 cm (300 DPI)</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+
+  <body>
+    <div class="wrap">
+      <header>
+        <h1>Photobooth Strip — 5 × 15 cm (300 DPI)</h1>
+        <p class="lead">
+          3 bingkai vertikal di bagian atas + area tulisan di bawah. Margin
+          putih aman sudah disiapkan.
+        </p>
+      </header>
+
+      <div class="controls">
+        <button id="startAuto" class="primary">Mulai Otomatis (3×10s)</button>
+        <button id="resetAll">Reset Photo</button>
+        <button id="chooseTemplateBtn">Ganti Template</button>
+        <input id="templateInput" type="file" accept="image/png" />
+        <button id="generateBtn">Generate</button>
+        <button id="downloadBtn">Download PNG</button>
+        <button id="printBtn">Print</button>
+      </div>
+
+      <div class="camera-wrap">
+        <div>
+          <div class="video-box">
+            <video id="video" autoplay playsinline></video>
+            <div id="countdown">10</div>
+          </div>
+
+          <div style="font-weight: 700; margin-top: 10px; text-align: center">
+            Preview Thumbnails (klik untuk hapus)
+          </div>
+          <div class="thumbs">
+            <canvas id="thumb0" class="thumb" data-index="0"></canvas>
+            <canvas id="thumb1" class="thumb" data-index="1"></canvas>
+            <canvas id="thumb2" class="thumb" data-index="2"></canvas>
+          </div>
+
+          <div class="text-area">
+            <input
+              id="eventText"
+              type="text"
+              placeholder="Judul acara / tanggal / #hashtag"
+            />
+          </div>
+        </div>
+
+        <div class="right-panel">
+          <div class="preview">
+            <h3>Hasil (5×15 cm — 591×1772 px)</h3>
+            <div class="print-area">
+              <canvas
+                id="printCanvas"
+                width="591"
+                height="1772"
+                class="print-canvas"
+              ></canvas>
+            </div>
+            <div class="note">
+              Klik <strong>Generate</strong> lalu <strong>Download</strong> atau
+              <strong>Print</strong>.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <script src="script.js"></script>
+  </body>
+</html>
