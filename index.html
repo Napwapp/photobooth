@@ -4,38 +4,445 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Photobooth 3 Frame — 5x15 cm (300 DPI)</title>
-    <link rel="stylesheet" href="style.css" />
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  
+    <style>
+      :root {
+        --bg-primary: #fafbfc;
+        --bg-secondary: #ffffff;
+        --border-light: #e8ecf0;
+        --text-primary: #1a202c;
+        --text-secondary: #718096;
+        --accent: #667eea;
+        --accent-hover: #5568d3;
+        --success: #48bb78;
+        --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+        --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+        --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
+      }
+      
+      * {
+        box-sizing: border-box;
+      }
+      
+      body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+        background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+        color: var(--text-primary);
+        padding: 24px;
+        min-height: 100vh;
+      }
+      
+      .wrap {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+      
+      header {
+        text-align: center;
+        margin-bottom: 32px;
+        background: var(--bg-secondary);
+        padding: 28px;
+        border-radius: 16px;
+        box-shadow: var(--shadow-sm);
+      }
+      
+      h1 {
+        margin: 0 0 12px 0;
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--text-primary);
+        letter-spacing: -0.5px;
+      }
+      
+      p.lead {
+        color: var(--text-secondary);
+        margin: 0;
+        font-size: 15px;
+        line-height: 1.6;
+      }
+
+      .controls {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-bottom: 24px;
+        padding: 20px;
+        background: var(--bg-secondary);
+        border-radius: 16px;
+        box-shadow: var(--shadow-sm);
+      }
+      
+      button {
+        padding: 12px 20px;
+        border-radius: 10px;
+        border: 2px solid var(--border-light);
+        background: var(--bg-secondary);
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 14px;
+        color: var(--text-primary);
+        transition: all 0.2s ease;
+        box-shadow: var(--shadow-sm);
+      }
+      
+      button:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+        border-color: var(--accent);
+      }
+      
+      button.primary {
+        background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
+        color: white;
+        border: none;
+      }
+      
+      button.primary:hover {
+        background: linear-gradient(135deg, var(--accent-hover) 0%, var(--accent) 100%);
+      }
+      
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+      }
+      
+      input[type="file"] {
+        display: none;
+      }
+
+      .camera-wrap {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 32px;
+        align-items: start;
+      }
+      
+      @media (max-width: 900px) {
+        .camera-wrap {
+          grid-template-columns: 1fr;
+        }
+      }
+      
+      .left-panel {
+        background: var(--bg-secondary);
+        padding: 24px;
+        border-radius: 16px;
+        box-shadow: var(--shadow-md);
+      }
+      
+      .video-box {
+        position: relative;
+        width: 100%;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: var(--shadow-lg);
+      }
+      
+      video {
+        width: 100%;
+        height: auto;
+        aspect-ratio: 4/3;
+        background: #000;
+        display: block;
+        object-fit: cover;
+      }
+      
+      #countdown {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 96px;
+        font-weight: 800;
+        color: white;
+        text-shadow: 0 8px 24px rgba(0, 0, 0, 0.8);
+        display: none;
+        pointer-events: none;
+        animation: pulse 1s ease-in-out;
+      }
+      
+      @keyframes pulse {
+        0%, 100% { transform: translate(-50%, -50%) scale(1); }
+        50% { transform: translate(-50%, -50%) scale(1.1); }
+      }
+
+      .section-title {
+        font-weight: 700;
+        margin: 20px 0 12px;
+        text-align: center;
+        font-size: 15px;
+        color: var(--text-primary);
+      }
+      
+      .thumbs {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-top: 12px;
+      }
+      
+      canvas.thumb {
+        width: 100%;
+        aspect-ratio: 4/3;
+        background: #f7f9fb;
+        border-radius: 10px;
+        border: 2px solid var(--border-light);
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+      
+      canvas.thumb:hover {
+        border-color: var(--accent);
+        transform: scale(1.05);
+        box-shadow: var(--shadow-md);
+      }
+
+      .text-area {
+        margin-top: 16px;
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        align-items: center;
+      }
+      
+      input[type="text"] {
+        padding: 12px 16px;
+        border-radius: 10px;
+        border: 2px solid var(--border-light);
+        width: 100%;
+        font-size: 14px;
+        transition: all 0.2s ease;
+        background: var(--bg-primary);
+      }
+      
+      input[type="text"]:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+
+      .right-panel {
+        background: var(--bg-secondary);
+        padding: 24px;
+        border-radius: 16px;
+        box-shadow: var(--shadow-md);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .preview h3 {
+        margin: 0 0 16px 0;
+        font-size: 18px;
+        font-weight: 700;
+        text-align: center;
+        color: var(--text-primary);
+      }
+      
+      .print-area {
+        display: inline-block;
+        background: var(--bg-secondary);
+        padding: 16px;
+        border-radius: 12px;
+        box-shadow: var(--shadow-lg);
+        border: 2px solid var(--border-light);
+        margin:0 20%;
+      }
+      
+      .print-canvas {
+        width: 120px;
+        height: 360px;
+        border: 1px solid var(--border-light);
+        display: block;
+        border-radius: 6px;
+      }
+
+      .note {
+        color: var(--text-secondary);
+        font-size: 13px;
+        text-align: center;
+        margin-top: 16px;
+        line-height: 1.6;
+      }
+
+      #photoModal {
+        display: none;
+        position: fixed;
+        z-index: 100;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.9);
+        justify-content: center;
+        align-items: center;
+      }
+      
+      #photoModal img {
+        max-width: 90%;
+        max-height: 90%;
+        border-radius: 12px;
+        box-shadow: 0 0 50px rgba(0,0,0,0.8);
+      }
+      
+      #closeModal {
+        position: absolute;
+        top: 30px;
+        right: 40px;
+        color: white;
+        font-size: 40px;
+        cursor: pointer;
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255,255,255,0.1);
+        border-radius: 50%;
+        transition: all 0.2s ease;
+      }
+      
+      #closeModal:hover {
+        background: rgba(255,255,255,0.2);
+        transform: scale(1.1);
+      }
+
+      #templateModal {
+        display: none;
+        position: fixed;
+        z-index: 101;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        overflow-y: auto;
+        padding: 40px 20px;
+        box-sizing: border-box;
+      }
+      
+      .modal-content {
+        max-width: 900px;
+        margin: 0 auto;
+        background: var(--bg-secondary);
+        border-radius: 20px;
+        padding: 32px;
+        box-shadow: var(--shadow-lg);
+      }
+      
+      #templateModal h2 {
+        text-align: center;
+        margin: 0 0 24px 0;
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--text-primary);
+      }
+      
+      .template-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+      
+      .template-item {
+        border: 3px solid var(--border-light);
+        border-radius: 12px;
+        overflow: hidden;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        background: #f7f9fb;
+      }
+      
+      .template-item:hover {
+        border-color: var(--accent);
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-md);
+      }
+      
+      .template-item img {
+        width: 100%;
+        height: 240px;
+        object-fit: contain;
+        background: white;
+      }
+      
+      .template-item.active {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
+      }
+      
+      .modal-footer {
+        text-align: center;
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        padding-top: 24px;
+        border-top: 2px solid var(--border-light);
+      }
+
+      @page {
+        size: 5cm 15cm;
+        margin: 0;
+      }
+      
+      @media print {
+        body * {
+          visibility: hidden;
+        }
+        .print-area,
+        .print-area * {
+          visibility: visible;
+        }
+        .print-area {
+          position: fixed;
+          left: 0;
+          top: 0;
+          margin: 0;
+          padding: 0;
+        }
+        canvas#printCanvas {
+          width: 5cm !important;
+          height: 15cm !important;
+        }
+      }
+    </style>
   </head>
 
   <body>
     <div class="wrap">
       <header>
-        <h1>Photobooth Strip — 5 × 15 cm (300 DPI)</h1>
+        <h1>📸 Photobooth Strip — 5 × 15 cm</h1>
         <p class="lead">
-          3 bingkai vertikal di bagian atas + area tulisan di bawah. Margin
-          putih aman sudah disiapkan.
+          3 bingkai vertikal di bagian atas + area tulisan di bawah. Margin putih aman sudah disiapkan. (300 DPI)
         </p>
       </header>
 
       <div class="controls">
-        <button id="startAuto" class="primary">Mulai Otomatis (3×10s)</button>
-        <button id="resetAll">Reset Photo</button>
-        <button id="chooseTemplateBtn">Ganti Template</button>
-        <input id="templateInput" type="file" accept="image/png" />
-        <button id="generateBtn">Generate</button>
-        <button id="downloadBtn">Download PNG</button>
-        <button id="printBtn">Print</button>
+        <button id="startAuto" class="primary">▶ Mulai Otomatis (3×10s)</button>
+        <button id="resetAll">🔄 Reset Photo</button>
+        <button id="chooseTemplateBtn">🎨 Ganti Template</button>
+        <button id="generateBtn" class="primary">✨ Generate</button>
+        <button id="downloadBtn">💾 Download PNG</button>
+        <button id="downloadPdfBtn">📄 Download PDF</button>
+        <button id="printBtn">🖨️ Print</button>
       </div>
 
       <div class="camera-wrap">
-        <div>
+        <div class="left-panel">
           <div class="video-box">
             <video id="video" autoplay playsinline></video>
             <div id="countdown">10</div>
           </div>
 
-          <div style="font-weight: 700; margin-top: 10px; text-align: center">
-            Preview Thumbnails (klik untuk hapus)
+          <div class="section-title">
+            📷 Preview Thumbnails (klik untuk hapus / lihat besar)
           </div>
           <div class="thumbs">
             <canvas id="thumb0" class="thumb" data-index="0"></canvas>
@@ -47,14 +454,14 @@
             <input
               id="eventText"
               type="text"
-              placeholder="Judul acara / tanggal / #hashtag"
+              placeholder="✍️ Judul acara / tanggal / #hashtag"
             />
           </div>
         </div>
 
         <div class="right-panel">
           <div class="preview">
-            <h3>Hasil (5×15 cm — 591×1772 px)</h3>
+            <h3>🎯 Hasil (5×15 cm — 591×1772 px)</h3>
             <div class="print-area">
               <canvas
                 id="printCanvas"
@@ -64,14 +471,325 @@
               ></canvas>
             </div>
             <div class="note">
-              Klik <strong>Generate</strong> lalu <strong>Download</strong> atau
-              <strong>Print</strong>.
+              Klik <strong>Generate</strong> untuk render preview,<br>
+              lalu <strong>Download</strong> atau <strong>Print</strong>.
             </div>
           </div>
         </div>
       </div>
     </div>
-    
-    <script src="script.js"></script>
+
+    <div id="photoModal">
+      <span id="closeModal">&times;</span>
+      <img id="modalImage" src="" alt="Preview Foto" />
+    </div>
+
+    <div id="templateModal">
+      <div class="modal-content">
+        <h2>🎨 Pilih Template</h2>
+        <div class="template-grid" id="templateGrid"></div>
+        <div class="modal-footer">
+          <button id="useTemplateBtn" class="primary">✅ Gunakan Template Ini</button>
+          <button id="cancelTemplateBtn">❌ Batal</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const { jsPDF } = window.jspdf;
+
+      const VIDEO = document.getElementById("video");
+      const COUNTDOWN = document.getElementById("countdown");
+      const START_AUTO = document.getElementById("startAuto");
+      const RESET_ALL = document.getElementById("resetAll");
+      const CHOOSE_TEMPLATE_BTN = document.getElementById("chooseTemplateBtn");
+      const GENERATE_BTN = document.getElementById("generateBtn");
+      const DOWNLOAD_BTN = document.getElementById("downloadBtn");
+      const DOWNLOAD_PDF_BTN = document.getElementById("downloadPdfBtn");
+      const PRINT_BTN = document.getElementById("printBtn");
+      const EVENT_TEXT = document.getElementById("eventText");
+
+      const THUMBS = [
+        document.getElementById("thumb0"),
+        document.getElementById("thumb1"),
+        document.getElementById("thumb2"),
+      ];
+
+      const PRINT_CANVAS = document.getElementById("printCanvas");
+      const pcx = PRINT_CANVAS.getContext("2d");
+
+      const CANVAS_W = 591;
+      const CANVAS_H = 1772;
+      const MARGIN = 24;
+      const GAP = 30;
+      const FRAME_W = CANVAS_W - 2 * MARGIN;
+      const FRAME_H = 449;
+      const TOP_Y = MARGIN + 10;
+
+      const FRAME_POS = [
+        { x: MARGIN, y: TOP_Y },
+        { x: MARGIN, y: TOP_Y + FRAME_H + GAP },
+        { x: MARGIN, y: TOP_Y + 2 * (FRAME_H + GAP) },
+      ];
+
+      const TEXT_AREA_Y = TOP_Y + 3 * FRAME_H + 2 * GAP + 16;
+      const TEXT_AREA_H = CANVAS_H - TEXT_AREA_Y - MARGIN;
+
+      let stream = null;
+      let photos = [null, null, null];
+      let templateImg = null;
+      let selectedTemplateUrl = null;
+
+      const photoModal = document.getElementById("photoModal");
+      const modalImage = document.getElementById("modalImage");
+      const closeModal = document.getElementById("closeModal");
+      const templateModal = document.getElementById("templateModal");
+      const templateGrid = document.getElementById("templateGrid");
+      const useTemplateBtn = document.getElementById("useTemplateBtn");
+      const cancelTemplateBtn = document.getElementById("cancelTemplateBtn");
+
+      const TEMPLATE_PATHS = [
+        "assets/templates/tp-nailong.png",
+        "assets/templates/tp-blue.png",
+        "assets/templates/tp-brainrot.png",
+        "assets/templates/tp-freestyle.png",
+        "assets/templates/tp-hellokitty.png",
+        "assets/templates/tp-my litle pony.png",
+        "assets/templates/tp-pink.png",
+        "assets/templates/tp-vintage.png",
+      ];
+
+      async function startCamera() {
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: { width: 1280, height: 720 },
+            audio: false,
+          });
+          VIDEO.srcObject = stream;
+        } catch (err) {
+          alert("Tidak dapat mengakses kamera: " + err.message);
+        }
+      }
+      startCamera();
+
+      function drawCover(ctx, img, w, h, dx = 0, dy = 0) {
+        const scale = Math.max(w / img.width, h / img.height);
+        const sw = img.width * scale;
+        const sh = img.height * scale;
+        const x = dx + (w - sw) / 2;
+        const y = dy + (h - sh) / 2;
+        ctx.drawImage(img, x, y, sw, sh);
+      }
+
+      function renderThumb(index) {
+        const canvas = THUMBS[index];
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        if (!photos[index]) {
+          ctx.fillStyle = "#f7f9fb";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.fillStyle = "#cbd5e1";
+          ctx.font = "14px sans-serif";
+          ctx.textAlign = "center";
+          ctx.fillText(`Foto ${index + 1}`, canvas.width / 2, canvas.height / 2);
+          return;
+        }
+        const img = new Image();
+        img.onload = () => drawCover(ctx, img, canvas.width, canvas.height);
+        img.src = photos[index];
+      }
+
+      THUMBS.forEach((c) => {
+        c.addEventListener("click", () => {
+          const idx = Number(c.dataset.index);
+          if (photos[idx]) {
+            const action = confirm("Klik OK untuk lihat besar, Cancel untuk hapus foto ke-" + (idx + 1));
+            if (action) {
+              modalImage.src = photos[idx];
+              photoModal.style.display = "flex";
+            } else {
+              photos[idx] = null;
+              renderThumb(idx);
+            }
+          }
+        });
+      });
+
+      closeModal.addEventListener("click", () => {
+        photoModal.style.display = "none";
+      });
+
+      async function countdownTimer(seconds) {
+        COUNTDOWN.style.display = "block";
+        let rem = seconds;
+        COUNTDOWN.textContent = rem;
+        while (rem > 0) {
+          await new Promise((r) => setTimeout(r, 1000));
+          rem--;
+          COUNTDOWN.textContent = rem > 0 ? rem : "📸";
+        }
+        COUNTDOWN.style.display = "none";
+      }
+
+      async function autoCapture() {
+        photos = [null, null, null];
+        THUMBS.forEach((c) => c.getContext("2d").clearRect(0, 0, c.width, c.height));
+        for (let i = 0; i < 3; i++) {
+          await countdownTimer(10);
+          const c = document.createElement("canvas");
+          c.width = VIDEO.videoWidth || 1280;
+          c.height = VIDEO.videoHeight || 720;
+          const ctx = c.getContext("2d");
+          ctx.drawImage(VIDEO, 0, 0, c.width, c.height);
+          photos[i] = c.toDataURL("image/png");
+          renderThumb(i);
+        }
+        alert("✅ Semua foto telah diambil!");
+      }
+
+      function drawTextArea() {
+        const text = EVENT_TEXT.value || "";
+        pcx.fillStyle = "#1a202c";
+        pcx.font = "28px sans-serif";
+        pcx.textAlign = "center";
+        let fontSize = 28;
+        const maxWidth = CANVAS_W - 2 * (MARGIN + 8);
+        while (pcx.measureText(text).width > maxWidth && fontSize > 12) {
+          fontSize -= 2;
+          pcx.font = `${fontSize}px sans-serif`;
+        }
+        pcx.fillText(text, CANVAS_W / 2, TEXT_AREA_Y + Math.floor(TEXT_AREA_H / 2));
+      }
+
+      function generatePrintCanvas() {
+        pcx.fillStyle = "#ffffff";
+        pcx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+        
+        let loadedCount = 0;
+        const checkComplete = () => {
+          loadedCount++;
+          if (loadedCount === 3) {
+            if (templateImg) pcx.drawImage(templateImg, 0, 0, CANVAS_W, CANVAS_H);
+            drawTextArea();
+          }
+        };
+
+        for (let i = 0; i < 3; i++) {
+          const pos = FRAME_POS[i];
+          pcx.fillStyle = "#fafafa";
+          pcx.fillRect(pos.x, pos.y, FRAME_W, FRAME_H);
+          if (photos[i]) {
+            const img = new Image();
+            img.onload = () => {
+              drawCover(pcx, img, FRAME_W, FRAME_H, pos.x, pos.y);
+              checkComplete();
+            };
+            img.src = photos[i];
+          } else {
+            checkComplete();
+          }
+        }
+      }
+
+      CHOOSE_TEMPLATE_BTN.addEventListener("click", () => {
+        templateGrid.innerHTML = "";
+        
+        TEMPLATE_PATHS.forEach((path) => {
+          const img = new Image();
+          img.src = path;
+          img.onerror = () => {
+            console.warn(`Template tidak ditemukan: ${path}`);
+          };
+          
+          const item = document.createElement("div");
+          item.className = "template-item";
+          item.innerHTML = `<img src="${path}" />`;
+          item.addEventListener("click", () => {
+            document.querySelectorAll(".template-item").forEach(el => el.classList.remove("active"));
+            item.classList.add("active");
+            selectedTemplateUrl = path;
+          });
+          templateGrid.appendChild(item);
+        });
+
+        templateModal.style.display = "block";
+      });
+
+      useTemplateBtn.addEventListener("click", () => {
+        if (!selectedTemplateUrl) {
+          alert("⚠️ Pilih template terlebih dahulu!");
+          return;
+        }
+        const img = new Image();
+        img.onload = () => {
+          templateImg = img;
+          alert("✅ Template berhasil dimuat!");
+          templateModal.style.display = "none";
+        };
+        img.onerror = () => {
+          alert("❌ Gagal memuat template. Periksa path file.");
+        };
+        img.src = selectedTemplateUrl;
+      });
+
+      cancelTemplateBtn.addEventListener("click", () => {
+        templateModal.style.display = "none";
+      });
+
+      RESET_ALL.addEventListener("click", () => {
+        if (confirm("Reset semua foto?")) {
+          photos = [null, null, null];
+          THUMBS.forEach((t, i) => renderThumb(i));
+          pcx.fillStyle = "#ffffff";
+          pcx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+        }
+      });
+
+      START_AUTO.addEventListener("click", async () => {
+        START_AUTO.disabled = true;
+        await autoCapture();
+        START_AUTO.disabled = false;
+      });
+
+      GENERATE_BTN.addEventListener("click", () => {
+        generatePrintCanvas();
+        alert("✅ Render selesai — cek preview hasil di kanan layar.");
+      });
+
+      DOWNLOAD_BTN.addEventListener("click", () => {
+        generatePrintCanvas();
+        setTimeout(() => {
+          const link = document.createElement("a");
+          link.download = "photostrip-5x15.png";
+          link.href = PRINT_CANVAS.toDataURL("image/png");
+          link.click();
+        }, 500);
+      });
+
+      DOWNLOAD_PDF_BTN.addEventListener("click", async () => {
+        generatePrintCanvas();
+        setTimeout(async () => {
+          const imgData = PRINT_CANVAS.toDataURL("image/png");
+          const pdf = new jsPDF({
+            orientation: "portrait",
+            unit: "mm",
+            format: [50, 150],
+          });
+          pdf.addImage(imgData, "PNG", 0, 0, 50, 150);
+          pdf.save("photostrip-5x15.pdf");
+        }, 500);
+      });
+
+      PRINT_BTN.addEventListener("click", () => {
+        generatePrintCanvas();
+        setTimeout(() => window.print(), 500);
+      });
+
+      (function init() {
+        pcx.fillStyle = "#ffffff";
+        pcx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+        THUMBS.forEach((t, i) => renderThumb(i));
+      })();
+    </script>
   </body>
 </html>
