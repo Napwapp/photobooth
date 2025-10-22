@@ -15,6 +15,31 @@ const THUMBS = [
   document.getElementById("thumb2"),
 ];
 
+// Data Templates
+const TEMPLATES = [
+  {
+    id: "1",
+    name: "Template 1",
+    thumbnail: "assets/templates/tp-blue.png",
+    fullSize: "assets/templates/tp-blue.png",
+    category: "wedding",
+  },
+  {
+    id: "2",
+    name: "Template 2",
+    thumbnail: "assets/templates/tp-blue.png",
+    fullSize: "assets/templates/tp-blue.png",
+    category: "birthday",
+  },
+  {
+    id: "3",
+    name: "Template 3",
+    thumbnail: "assets/templates/tp-blue.png",
+    fullSize: "assets/templates/tp-blue.png",
+    category: "formal",
+  },
+];
+
 const PRINT_CANVAS = document.getElementById("printCanvas");
 const pcx = PRINT_CANVAS.getContext("2d");
 
@@ -132,41 +157,48 @@ function drawTextArea() {
   pcx.fillText(text, CANVAS_W / 2, TEXT_AREA_Y + Math.floor(TEXT_AREA_H / 2));
 }
 
+// Generate print canvas
 function generatePrintCanvas() {
   pcx.fillStyle = "#ffffff";
   pcx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+
+  // Draw photos
   for (let i = 0; i < 3; i++) {
     const pos = FRAME_POS[i];
     pcx.fillStyle = "#fafafa";
     pcx.fillRect(pos.x, pos.y, FRAME_W, FRAME_H);
+
     if (photos[i]) {
       const img = new Image();
       img.onload = () => {
         drawCover(pcx, img, FRAME_W, FRAME_H, pos.x, pos.y);
+
+        // Draw template setelah semua foto selesai load
         if (i === 2) {
-          if (templateImg) pcx.drawImage(templateImg, 0, 0, CANVAS_W, CANVAS_H);
+          if (window.templateImg) {
+            pcx.drawImage(window.templateImg, 0, 0, CANVAS_W, CANVAS_H);
+          }
           drawTextArea();
         }
       };
       img.src = photos[i];
     }
   }
-  drawTextArea();
 }
 
-CHOOSE_TEMPLATE_BTN.addEventListener("click", () => TEMPLATE_INPUT.click());
-TEMPLATE_INPUT.addEventListener("change", (e) => {
-  const f = e.target.files[0];
-  if (!f) return;
-  const url = URL.createObjectURL(f);
-  const img = new Image();
-  img.onload = () => {
-    templateImg = img;
-    URL.revokeObjectURL(url);
-    alert("Template berhasil dimuat.");
-  };
-  img.src = url;
-});
+// CHOOSE_TEMPLATE_BTN.addEventListener("click", () => TEMPLATE_INPUT.click());
+// TEMPLATE_INPUT.addEventListener("change", (e) => {
+//   const f = e.target.files[0];
+//   if (!f) return;
+//   const url = URL.createObjectURL(f);
+//   const img = new Image();
+//   img.onload = () => {
+//     templateImg = img;
+//     URL.revokeObjectURL(url);
+//     alert("Template berhasil dimuat.");
+//   };
+//   img.src = url;
+// });
 
 RESET_ALL.addEventListener("click", () => {
   if (confirm("Reset semua foto?")) {
@@ -208,3 +240,204 @@ PRINT_BTN.addEventListener("click", () => {
   pcx.fillStyle = "#ffffff";
   pcx.fillRect(0, 0, CANVAS_W, CANVAS_H);
 })();
+
+// Logic Change Template
+class TemplateManager {
+  constructor() {
+    this.currentTemplate = null;
+    this.templates = TEMPLATES;
+    this.initializeModals();
+  }
+
+  // Modal elements
+  initializeModals() {
+    this.templateListModal = document.getElementById("templateListModal");
+    this.allTemplatesModal = document.getElementById("allTemplatesModal");
+    this.mainPreview = document.getElementById("mainPreview");
+    this.templateName = document.getElementById("templateName");
+    this.templateGrid = document.getElementById("templateGrid");
+    this.allTemplatesGrid = document.getElementById("allTemplatesGrid");
+
+    // Buttons
+    this.chooseTemplateBtn = document.getElementById("chooseTemplateBtn");
+    this.useTemplateBtn = document.getElementById("useTemplateBtn");
+    this.viewAllTemplatesBtn = document.getElementById("viewAllTemplatesBtn");
+
+    this.bindEvents();
+    this.loadTemplateGrid();
+    this.loadAllTemplatesGrid();
+  }
+
+  bindEvents() {
+    // Open template list modal
+    this.chooseTemplateBtn.addEventListener("click", () => {
+      this.openTemplateListModal();
+    });
+
+    // Use selected template
+    this.useTemplateBtn.addEventListener("click", () => {
+      this.applyTemplate();
+    });
+
+    // View all templates
+    this.viewAllTemplatesBtn.addEventListener("click", () => {
+      this.openAllTemplatesModal();
+    });
+
+    // Close modals
+    document.querySelectorAll(".close-modal").forEach((closeBtn) => {
+      closeBtn.addEventListener("click", () => {
+        this.closeAllModals();
+      });
+    });
+
+    // Close modal when clicking outside
+    window.addEventListener("click", (e) => {
+      if (e.target === this.templateListModal) {
+        this.closeAllModals();
+      }
+      if (e.target === this.allTemplatesModal) {
+        this.closeAllModals();
+      }
+    });
+  }
+
+  openTemplateListModal(templateId = null) {
+    // Jika ada templateId, set sebagai preview utama
+    if (templateId) {
+      const template = this.templates.find((t) => t.id === templateId);
+      if (template) {
+        this.setMainPreview(template);
+      }
+    } else if (this.currentTemplate) {
+      // Jika sedang ada template aktif, preview template tersebut
+      this.setMainPreview(this.currentTemplate);
+    } else {
+      // Default preview template pertama
+      this.setMainPreview(this.templates[0]);
+    }
+
+    this.templateListModal.style.display = "block";
+    this.highlightActiveTemplate();
+  }
+
+  openAllTemplatesModal() {
+    this.allTemplatesModal.style.display = "block";
+  }
+
+  closeAllModals() {
+    this.templateListModal.style.display = "none";
+    this.allTemplatesModal.style.display = "none";
+  }
+
+  loadTemplateGrid() {
+    // Tampilkan 8 template pertama di sidebar
+    const featuredTemplates = this.templates.slice(0, 8);
+
+    this.templateGrid.innerHTML = featuredTemplates
+      .map(
+        (template) => `
+            <img src="${template.thumbnail}" 
+                 alt="${template.name}" 
+                 class="template-thumbnail" 
+                 data-id="${template.id}"
+                 onclick="templateManager.setMainPreviewFromId('${template.id}')">
+        `
+      )
+      .join("");
+  }
+
+  loadAllTemplatesGrid() {
+    this.allTemplatesGrid.innerHTML = this.templates
+      .map(
+        (template) => `
+            <div class="all-template-item" onclick="templateManager.selectTemplateFromAll('${template.id}')">
+                <img src="${template.thumbnail}" 
+                     alt="${template.name}" 
+                     class="all-template-thumb">
+                <div class="all-template-name">${template.name}</div>
+            </div>
+        `
+      )
+      .join("");
+  }
+
+  setMainPreviewFromId(templateId) {
+    const template = this.templates.find((t) => t.id === templateId);
+    if (template) {
+      this.setMainPreview(template);
+      this.highlightActiveTemplate();
+    }
+  }
+
+  setMainPreview(template) {
+    this.mainPreview.src = template.fullSize;
+    this.templateName.textContent = template.name;
+    this.currentPreviewTemplate = template;
+  }
+
+  highlightActiveTemplate() {
+    // Remove active class dari semua thumbnails
+    document.querySelectorAll(".template-thumbnail").forEach((thumb) => {
+      thumb.classList.remove("active");
+    });
+
+    // Add active class ke thumbnail yang sedang dipreview
+    if (this.currentPreviewTemplate) {
+      const activeThumb = document.querySelector(
+        `[data-id="${this.currentPreviewTemplate.id}"]`
+      );
+      if (activeThumb) {
+        activeThumb.classList.add("active");
+      }
+    }
+  }
+
+  selectTemplateFromAll(templateId) {
+    this.closeAllModals();
+    setTimeout(() => {
+      this.openTemplateListModal(templateId);
+    }, 300);
+  }
+
+  applyTemplate() {
+    if (this.currentPreviewTemplate) {
+      this.currentTemplate = this.currentPreviewTemplate;
+
+      // apply template ke photobooth
+      this.applyTemplateToPhotobooth(this.currentPreviewTemplate);
+
+      this.closeAllModals();
+      alert(
+        `Template "${this.currentPreviewTemplate.name}" berhasil diterapkan!`
+      );
+    }
+  }
+
+  // Fungsi untuk menerapkan template ke photobooth
+  //  {{ Mungkin disini letak masalah nya (dimana template menutupi gambar) }} //
+  applyTemplateToPhotobooth(template) {
+    const img = new Image();
+    img.onload = () => {
+      // Simpan template image ke variabel global yang digunakan generatePrintCanvas
+      window.templateImg = img; // atau this.templateImg jika menggunakan class
+
+      // Generate ulang canvas dengan template baru
+      if (typeof generatePrintCanvas === "function") {
+        generatePrintCanvas();
+      }
+    };
+
+    img.onerror = () => {
+      console.error("Failed to load template:", template.fullSize);
+      alert(
+        "Gagal memuat template. Pastikan file template ada di folder yang benar."
+      );
+    };
+
+    img.src = template.fullSize;
+  }
+}
+
+// Initialize template manager
+const templateManager = new TemplateManager();
