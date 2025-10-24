@@ -73,6 +73,13 @@ const TEMPLATES = [
     fullSize: "assets/templates/tp-vintage.png",
     category: "formal",
   },
+  {
+    id: "9",
+    name: "Template 8",
+    thumbnail: "assets/templates/tp-vintage.png",
+    fullSize: "assets/templates/tp-vintage.png",
+    category: "formal",
+  },
 ];
 
 const PRINT_CANVAS = document.getElementById("printCanvas");
@@ -304,7 +311,7 @@ class TemplateManager {
   }
 
   bindEvents() {
-    // Open template list modal
+    // Buka template list modal
     this.chooseTemplateBtn.addEventListener("click", () => {
       this.openTemplateListModal();
     });
@@ -314,14 +321,27 @@ class TemplateManager {
       this.applyTemplate();
     });
 
-    // View all templates
+    // Buka modal semua templates
     this.viewAllTemplatesBtn.addEventListener("click", () => {
       this.openAllTemplatesModal();
     });
 
-    // Close modals
+    // Button close modal
     document.querySelectorAll(".close-modal").forEach((closeBtn) => {
       closeBtn.addEventListener("click", () => {
+        // Jika modal daftar template sedang terbuka, tutup hanya modal tersebut
+        if (this.templateListModal && this.templateListModal.style.display === "block") {
+          this.closeTemplateListModal();
+          return;
+        }
+
+        // Jika modal semua template sedang terbuka, tutup semua modal
+        if (this.allTemplatesModal && this.allTemplatesModal.style.display === "block") {
+          this.closeAllModals();
+          return;
+        }
+
+        // Fallback: tutup semua modal
         this.closeAllModals();
       });
     });
@@ -329,7 +349,7 @@ class TemplateManager {
     // Close modal when clicking outside
     window.addEventListener("click", (e) => {
       if (e.target === this.templateListModal) {
-        this.closeAllModals();
+        this.closeTemplateListModal();
       }
       if (e.target === this.allTemplatesModal) {
         this.closeAllModals();
@@ -337,6 +357,7 @@ class TemplateManager {
     });
   }
 
+  // Buka atau Tutup Template List Modal
   openTemplateListModal(templateId = null) {
     // Jika ada templateId, set sebagai preview utama
     if (templateId) {
@@ -356,18 +377,25 @@ class TemplateManager {
     this.highlightActiveTemplate();
   }
 
+  closeTemplateListModal() {
+    this.templateListModal.style.display = "none";
+  }
+
+  // Buka atau Tutup All Templates Modal
   openAllTemplatesModal() {
+    // Tutup template list modal jika terbuka
+    if (this.templateListModal && this.templateListModal.style.display === "block") {
+      this.closeTemplateListModal();
+    }
     this.allTemplatesModal.style.display = "block";
   }
 
   closeAllModals() {
-    this.templateListModal.style.display = "none";
     this.allTemplatesModal.style.display = "none";
   }
 
   loadTemplateGrid() {
-    // Tampilkan 8 template pertama di sidebar
-    const featuredTemplates = this.templates.slice(0, 8);
+    const featuredTemplates = this.templates;
 
     this.templateGrid.innerHTML = featuredTemplates
       .map(
@@ -389,7 +417,7 @@ class TemplateManager {
             <div class="all-template-item" onclick="templateManager.selectTemplateFromAll('${template.id}')">
                 <img src="${template.thumbnail}" 
                      alt="${template.name}" 
-                     class="all-template-thumb">
+                     class="all-template-thumb w-100">
                 <div class="all-template-name">${template.name}</div>
             </div>
         `
@@ -442,7 +470,7 @@ class TemplateManager {
       // apply template ke photobooth
       this.applyTemplateToPhotobooth(this.currentPreviewTemplate);
 
-      this.closeAllModals();
+      this.closeTemplateListModal();
       alert(
         `Template "${this.currentPreviewTemplate.name}" berhasil diterapkan!`
       );
