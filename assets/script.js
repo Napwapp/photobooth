@@ -1,3 +1,4 @@
+// Element references
 const VIDEO = document.getElementById("video");
 const COUNTDOWN = document.getElementById("countdown");
 const START_AUTO = document.getElementById("startAuto");
@@ -8,6 +9,16 @@ const GENERATE_BTN = document.getElementById("generateBtn");
 const DOWNLOAD_BTN = document.getElementById("downloadBtn");
 const PRINT_BTN = document.getElementById("printBtn");
 const EVENT_TEXT = document.getElementById("eventText");
+
+// Modal Preview Image
+const modalPreviewImage = new bootstrap.Modal(
+  document.getElementById("modalPreviewImage")
+);
+const previewImage = document.getElementById("previewImage");
+const photoSidebar = document.getElementById("photoSidebar");
+const prevBtn = document.getElementById("prevBtn");
+const nextBtn = document.getElementById("nextBtn");
+const deletePhotoBtn = document.getElementById("deletePhotoBtn");
 
 const THUMBS = [
   document.getElementById("thumb0"),
@@ -82,6 +93,7 @@ const TEMPLATES = [
   },
 ];
 
+// Canvas setup
 const PRINT_CANVAS = document.getElementById("printCanvas");
 const pcx = PRINT_CANVAS.getContext("2d");
 
@@ -128,6 +140,11 @@ function drawCover(ctx, img, w, h, dx = 0, dy = 0) {
   ctx.drawImage(img, x, y, sw, sh);
 }
 
+// Logika Thumbnail dan Modal Preview Image
+
+let currentPhotoIndex = 0;
+
+// Render Thumbnail di halaman utama
 function renderThumb(index) {
   const canvas = THUMBS[index];
   const ctx = canvas.getContext("2d");
@@ -145,16 +162,151 @@ function renderThumb(index) {
   img.src = photos[index];
 }
 
-THUMBS.forEach((c) => {
-  c.addEventListener("click", () => {
-    const idx = Number(c.dataset.index);
+// Thumbnail click event
+THUMBS.forEach((thumb) => {
+  thumb.addEventListener("click", () => {
+    const idx = Number(thumb.dataset.index);
+
     if (photos[idx]) {
-      if (confirm("Hapus foto ke-" + (idx + 1) + "?")) {
-        photos[idx] = null;
-        renderThumb(idx);
-      }
+      // Set current photo index dan langsung show modal
+      currentPhotoIndex = idx;
+      previewImage.src = photos[currentPhotoIndex];
+
+      // Render sidebar dan update carousel
+      renderSidebarThumbs();
+      updateCarouselButtons();
+
+      // Show modal
+      modalPreviewImage.show();
     }
   });
+});
+
+// Render sidebar thumbnails di modal
+function renderSidebarThumbs() {
+  photoSidebar.innerHTML = "";
+
+  photos.forEach((photo, index) => {
+    if (photo) {
+      const col = document.createElement("div");
+      col.className = "col-6";
+
+      const img = document.createElement("img");
+      img.src = photo;
+      img.alt = `Foto ${index + 1}`;
+      img.className = `photo-thumbnail ${
+        index === currentPhotoIndex ? "active" : ""
+      }`;
+      img.dataset.index = index;
+
+      img.addEventListener("click", () => {
+        // Update current photo index
+        currentPhotoIndex = index;
+
+        // Update main image
+        previewImage.src = photos[currentPhotoIndex];
+
+        // Update active state pada sidebar
+        document.querySelectorAll(".photo-thumbnail").forEach((thumb) => {
+          thumb.classList.remove("active");
+        });
+        img.classList.add("active");
+
+        // Update carousel buttons
+        updateCarouselButtons();
+      });
+
+      col.appendChild(img);
+      photoSidebar.appendChild(col);
+    }
+  });
+}
+
+// Update carousel buttons visibility
+function updateCarouselButtons() {
+  // Hide/show prev button
+  if (currentPhotoIndex === 0) {
+    prevBtn.classList.add("hidden");
+  } else {
+    prevBtn.classList.remove("hidden");
+  }
+
+  // Hide/show next button
+  if (
+    currentPhotoIndex === photos.length - 1 ||
+    !photos[currentPhotoIndex + 1]
+  ) {
+    nextBtn.classList.add("hidden");
+  } else {
+    nextBtn.classList.remove("hidden");
+  }
+}
+
+// Navigate to previous photo
+prevBtn.addEventListener("click", () => {
+  if (currentPhotoIndex > 0) {
+    currentPhotoIndex--;
+    previewImage.src = photos[currentPhotoIndex];
+    renderSidebarThumbs();
+    updateCarouselButtons();
+  }
+});
+
+// Navigate to next photo
+nextBtn.addEventListener("click", () => {
+  if (currentPhotoIndex < photos.length - 1 && photos[currentPhotoIndex + 1]) {
+    currentPhotoIndex++;
+    previewImage.src = photos[currentPhotoIndex];
+    renderSidebarThumbs();
+    updateCarouselButtons();
+  }
+});
+
+// Delete current photo
+deletePhotoBtn.addEventListener("click", () => {
+  const confirmDelete = confirm(
+    `Apakah Anda yakin ingin menghapus Foto ${currentPhotoIndex + 1}?`
+  );
+
+  if (confirmDelete) {
+    photos[currentPhotoIndex] = null;
+
+    // Render ulang thumbnail di halaman utama
+    renderThumb(currentPhotoIndex);
+
+    // Find next available photo
+    let nextIndex = -1;
+    for (let i = currentPhotoIndex + 1; i < photos.length; i++) {
+      if (photos[i]) {
+        nextIndex = i;
+        break;
+      }
+    }
+
+    if (nextIndex === -1) {
+      for (let i = currentPhotoIndex - 1; i >= 0; i--) {
+        if (photos[i]) {
+          nextIndex = i;
+          break;
+        }
+      }
+    }
+
+    if (nextIndex !== -1) {
+      currentPhotoIndex = nextIndex;
+      previewImage.src = photos[currentPhotoIndex];
+      renderSidebarThumbs();
+      updateCarouselButtons();
+    } else {
+      // No photos left, close modal
+      modalPreviewImage.hide();
+    }
+  }
+});
+
+// Initialize - render semua thumbnail di halaman utama
+THUMBS.forEach((thumb, index) => {
+  renderThumb(index);
 });
 
 async function countdownTimer(seconds) {
@@ -173,7 +325,7 @@ async function autoCapture() {
   photos = [null, null, null];
   THUMBS.forEach((c) => c.getContext("2d").clearRect(0, 0, c.width, c.height));
   for (let i = 0; i < 3; i++) {
-    await countdownTimer(10);
+    await countdownTimer(3);
     const c = document.createElement("canvas");
     c.width = VIDEO.videoWidth || 1280;
     c.height = VIDEO.videoHeight || 720;
@@ -330,13 +482,19 @@ class TemplateManager {
     document.querySelectorAll(".close-modal").forEach((closeBtn) => {
       closeBtn.addEventListener("click", () => {
         // Jika modal daftar template sedang terbuka, tutup hanya modal tersebut
-        if (this.templateListModal && this.templateListModal.style.display === "block") {
+        if (
+          this.templateListModal &&
+          this.templateListModal.style.display === "block"
+        ) {
           this.closeTemplateListModal();
           return;
         }
 
         // Jika modal semua template sedang terbuka, tutup semua modal
-        if (this.allTemplatesModal && this.allTemplatesModal.style.display === "block") {
+        if (
+          this.allTemplatesModal &&
+          this.allTemplatesModal.style.display === "block"
+        ) {
           this.closeAllModals();
           return;
         }
@@ -384,7 +542,10 @@ class TemplateManager {
   // Buka atau Tutup All Templates Modal
   openAllTemplatesModal() {
     // Tutup template list modal jika terbuka
-    if (this.templateListModal && this.templateListModal.style.display === "block") {
+    if (
+      this.templateListModal &&
+      this.templateListModal.style.display === "block"
+    ) {
       this.closeTemplateListModal();
     }
     this.allTemplatesModal.style.display = "block";

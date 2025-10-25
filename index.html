@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Photobooth 3 Frame — 5x15 cm (300 DPI)</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <link rel="stylesheet" href="assets/style.css" />
   <link rel="stylesheet" href="assets/modals.css">
 </head>
@@ -38,10 +39,9 @@
           <video id="video" autoplay playsinline></video>
           <div id="countdown">10</div>
         </div>
-
-        <div style="font-weight: 700; margin-top: 10px; text-align: center">
+        <!-- <div style="font-weight: 700; margin-top: 10px; text-align: center">
           Preview Thumbnails (klik untuk hapus)
-        </div>
+        </div> -->
         <div class="thumbs">
           <canvas id="thumb0" class="thumb" data-index="0"></canvas>
           <canvas id="thumb1" class="thumb" data-index="1"></canvas>
@@ -124,8 +124,53 @@
     </div>
   </div>
 
-  <script src="assets/script.js"></script>
+  <!-- Modal preview image -->
+  <div id="modalPreviewImage" class="modal fade" tabindex="-1">
+    <div class="modal-dialog modal-xl photo-preview-modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Preview Foto</h5>
+
+          <!-- Action Buttons -->
+          <div class="d-flex ms-auto align-items-center">
+            <button id="deletePhotoBtn" class="btn btn-danger me-2"><i class="fas fa-trash"></i> Hapus Foto</button>
+            <button type="button" class="btn-close close-modal" data-bs-dismiss="modal"></button>
+          </div>
+        </div>
+
+        <div class="modal-body p-0">
+          <div class="row g-0 h-100">
+            <!-- Main Image Area -->
+            <div class="col-md-8 position-relative">
+              <div class="main-image-container p-3">
+                <img id="previewImage" class="main-image" src="" alt="Preview Foto">
+
+                <!-- Carousel Buttons -->
+                <button id="prevBtn" class="carousel-btn prev hidden">
+                  <i class="fas fa-chevron-left"></i>
+                </button>
+                <button id="nextBtn" class="carousel-btn next hidden">
+                  <i class="fas fa-chevron-right"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Photo Sidebar -->
+            <div class="col-md-4 border-start">
+              <div class="photo-sidebar p-3">
+                <div class="row g-3" id="photoSidebar">
+                  <!-- Photo thumbnails akan diisi oleh JavaScript -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="assets/script.js"></script>
 </body>
 
 </html>
