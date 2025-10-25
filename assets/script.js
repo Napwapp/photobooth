@@ -7,6 +7,7 @@ const CHOOSE_TEMPLATE_BTN = document.getElementById("chooseTemplateBtn");
 const TEMPLATE_INPUT = document.getElementById("templateInput");
 const GENERATE_BTN = document.getElementById("generateBtn");
 const DOWNLOAD_BTN = document.getElementById("downloadBtn");
+// const DOWNLOAD_PDF_BTN = document.getElementById("downloadPdfBtn");
 const PRINT_BTN = document.getElementById("printBtn");
 const EVENT_TEXT = document.getElementById("eventText");
 
@@ -418,12 +419,43 @@ GENERATE_BTN.addEventListener("click", () => {
 });
 
 DOWNLOAD_BTN.addEventListener("click", () => {
+  const downloadText = document.getElementById("downloadText");
+  const loadingSpinner = document.getElementById("loadingSpinner");
+
+  // Show loading state
+  downloadText.textContent = "Menyiapkan Download";
+  loadingSpinner.classList.remove("d-none");
+  DOWNLOAD_BTN.disabled = true;
+
   generatePrintCanvas();
-  const link = document.createElement("a");
-  link.download = "photostrip-5x15.png";
-  link.href = PRINT_CANVAS.toDataURL("image/png");
-  link.click();
+
+  // Delay untuk memastikan gambar terload
+  setTimeout(() => {
+    const link = document.createElement("a");
+    link.download = "photostrip-5x15.png";
+    link.href = PRINT_CANVAS.toDataURL("image/png");
+    link.click();
+
+    // Reset button state
+    downloadText.textContent = "Download PNG";
+    loadingSpinner.classList.add("d-none");
+    DOWNLOAD_BTN.disabled = false;
+  }, 1500);
 });
+
+// DOWNLOAD_PDF_BTN.addEventListener("click", async () => {
+//   generatePrintCanvas();
+//   setTimeout(async () => {
+//     const imgData = PRINT_CANVAS.toDataURL("image/png");
+//     const pdf = new jsPDF({
+//       orientation: "portrait",
+//       unit: "mm",
+//       format: [50, 150],
+//     });
+//     pdf.addImage(imgData, "PNG", 0, 0, 50, 150);
+//     pdf.save("photostrip-5x15.pdf");
+//   }, 500);
+// });
 
 PRINT_BTN.addEventListener("click", () => {
   generatePrintCanvas();
