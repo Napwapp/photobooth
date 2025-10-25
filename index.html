@@ -5,9 +5,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Photobooth 3 Frame — 5x15 cm (300 DPI)</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
-    integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
-
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="assets/style.css" />
   <link rel="stylesheet" href="assets/modals.css">
 </head>
@@ -23,7 +21,7 @@
     </header>
 
     <div class="controls">
-      <button id="startAuto" class="primary">Mulai Otomatis (3×10s)</button>
+      <button id="startAuto" class="btn-primary">Mulai Otomatis (3×10s)</button>
       <button id="resetAll">Reset Photo</button>
 
       <button id="chooseTemplateBtn">Ganti Template</button>
@@ -76,25 +74,33 @@
   <div id="templateListModal" class="modal">
     <div class="modal-content template-modal">
       <div class="modal-header">
-        <h2>Pilih Template</h2>
-        <span class="close-modal">&times;</span>
+        <h2 class="modal-title">Pilih Template</h2>
+        <button type="button" class="btn-close close-modal"></button>
       </div>
-      <div class="template-preview-container">
-        <!-- Preview Besar -->
-        <div class="main-preview">
-          <img id="mainPreview" src="" alt="Template Preview">
-          <div class="preview-info">
-            <h3 id="templateName">Nama Template</h3>
-            <button id="useTemplateBtn" class="btn-primary">Gunakan Template Ini</button>
-          </div>
-        </div>
+      <div class="modal-body p-0">
+        <div class="template-preview-container row g-0 h-100">
+          <!-- Preview Besar -->
+          <div class="main-preview col-md-8 d-flex flex-column p-4 border-end">
+            <div class="flex-grow-1 d-flex align-items-center justify-content-center">
+              <img id="mainPreview" src="" alt="Template Preview" class="w-100">
+            </div>
 
-        <!-- Grid Template -->
-        <div class="template-grid-sidebar">
-          <div class="template-grid" id="templateGrid">
-            <!-- Template thumbnails akan diisi oleh JavaScript -->
+            <div class="preview-info mt-4 text-center">
+              <h3 id="templateName" class="mb-3">Nama Template</h3>
+              <button id="useTemplateBtn" class="btn-primary">Gunakan Template Ini</button>
+            </div>
           </div>
-          <button id="viewAllTemplatesBtn" class="btn-secondary">Lihat Semua Template</button>
+
+          <!-- Grid Template -->
+          <div class="template-grid-sidebar col-md-4 d-flex flex-column p-4">
+            <div class="template-grid row row-cols-2 g-3 flex-grow-1 overflow-auto" id="templateGrid">
+              <!-- Template thumbnails akan diisi oleh JavaScript -->
+            </div>
+
+            <div class="mt-4">
+              <button id="viewAllTemplatesBtn" class="btn-secondary">Lihat Semua Template</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -102,19 +108,24 @@
 
   <!-- Modal Semua Template -->
   <div id="allTemplatesModal" class="modal">
-    <div class="modal-content all-templates-modal">
-      <div class="modal-header">
-        <h2>Semua Template</h2>
-        <span class="close-modal">&times;</span>
-      </div>
-      <div class="all-templates-grid" id="allTemplatesGrid">
-        <!-- Semua template thumbnails -->
+    <div class="modal-dialog modal-dialog-centered all-templates-modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 class="modal-title">Semua Template</h2>
+          <button type="button" class="btn-close close-modal"></button>
+        </div>
+
+        <div class="modal-body p-0">
+          <div class="all-templates-grid row row-cols-5 g-3 p-4" id="allTemplatesGrid">
+            <!-- Semua template thumbnails -->
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
   <script src="assets/script.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>
