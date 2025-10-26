@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hasil Photobooth - Kirim Email</title>
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
 <style>
         * {
@@ -21,6 +22,53 @@
             justify-content: center;
             align-items: center;
             padding: 20px;
+        }
+
+        .nav-menu {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .nav-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 50px;
+            text-decoration: none;
+            color: #1a202c;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .nav-link:hover {
+            transform: translateY(-2px);
+            background: #ffffff;
+            border-color: #667eea;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .nav-link i {
+            font-size: 18px;
+            color: #667eea;
+        }
+
+        @media (max-width: 640px) {
+            .nav-menu {
+                top: 10px;
+                right: 10px;
+            }
+            
+            .nav-link {
+                padding: 8px 16px;
+                font-size: 13px;
+            }
         }
 
         .container {
@@ -230,6 +278,13 @@
     </style>
 </head>
 <body>
+    <nav class="nav-menu">
+        <a href="index.html" class="nav-link">
+            <i class="fas fa-camera"></i>
+            <span>Kembali ke Photobooth</span>
+        </a>
+    </nav>
+    
     <div class="container">
         <div class="header">
             <div class="icon">🎉</div>
@@ -332,22 +387,27 @@
             messageDiv.style.display = 'none';
 
             try {
-                // 1. Upload ke ImgBB
+                // 1. Upload ke Cloudinary
                 const formData = new FormData();
-                formData.append('image', file);
+                formData.append('file', file);
+                formData.append('upload_preset', 'pb_pplg'); // Buat dulu di dashboard Cloudinary!
+                formData.append('cloud_name', 'dgg0hijrf');
 
-                const imgbbResponse = await fetch('https://api.imgbb.com/1/upload?key=b23fc644ea0964554c5a5a1ed1913da4', {
-                    method: 'POST',
-                    body: formData
-                });
+                const cloudinaryResponse = await fetch(
+                    `https://api.cloudinary.com/v1_1/dgg0hijrf/image/upload`,
+                    {
+                        method: 'POST',
+                        body: formData
+                    }
+                );
 
-                const imgbbData = await imgbbResponse.json();
+                const cloudinaryData = await cloudinaryResponse.json();
 
-                if (!imgbbData.success) {
-                    throw new Error('Gagal mengunggah gambar ke server.');
+                if (!cloudinaryData.secure_url) {
+                throw new Error('Gagal upload ke Cloudinary');
                 }
 
-                const imageUrl = imgbbData.data.url;
+                const imageUrl = cloudinaryData.secure_url;
 
                 // 2. Kirim email via EmailJS dengan link gambar
                 const emailResponse = await emailjs.send(
