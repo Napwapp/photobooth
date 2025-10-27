@@ -1,77 +1,266 @@
 <!DOCTYPE html>
 <html lang="id">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Photobooth 3 Frame — 5x15 cm (300 DPI)</title>
-    <link rel="stylesheet" href="style.css" />
-  </head>
 
-  <body>
-    <div class="wrap">
-      <header>
-        <h1>Photobooth Strip — 5 × 15 cm (300 DPI)</h1>
-        <p class="lead">
-          3 bingkai vertikal di bagian atas + area tulisan di bawah. Margin
-          putih aman sudah disiapkan.
-        </p>
-      </header>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Photobooth 3 Frame — 5x15 cm (300 DPI)</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="assets/style.css" />
+  <link rel="stylesheet" href="assets/modals.css">
+  <style>
+    .floating-nav {
+      position: fixed;
+      right: 30px;
+      bottom: 30px;
+      z-index: 1000;
+      transform-style: preserve-3d;
+      perspective: 1000px;
+    }
 
-      <div class="controls">
-        <button id="startAuto" class="primary">Mulai Otomatis (3×10s)</button>
-        <button id="resetAll">Reset Photo</button>
-        <button id="chooseTemplateBtn">Ganti Template</button>
-        <input id="templateInput" type="file" accept="image/png" />
-        <button id="generateBtn">Generate</button>
-        <button id="downloadBtn">Download PNG</button>
-        <button id="printBtn">Print</button>
-      </div>
+    .nav-btn {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 32px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: none;
+      border-radius: 50px;
+      color: white;
+      font-weight: 600;
+      text-decoration: none;
+      font-size: 16px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 10px 25px -5px rgba(102, 126, 234, 0.5);
+      transform: translateZ(0);
+    }
 
-      <div class="camera-wrap">
-        <div>
-          <div class="video-box">
-            <video id="video" autoplay playsinline></video>
-            <div id="countdown">10</div>
-          </div>
+    .nav-btn:hover {
+      transform: translateZ(20px) scale(1.05);
+      box-shadow: 0 20px 35px -10px rgba(102, 126, 234, 0.6);
+    }
 
-          <div style="font-weight: 700; margin-top: 10px; text-align: center">
-            Preview Thumbnails (klik untuk hapus)
-          </div>
-          <div class="thumbs">
-            <canvas id="thumb0" class="thumb" data-index="0"></canvas>
-            <canvas id="thumb1" class="thumb" data-index="1"></canvas>
-            <canvas id="thumb2" class="thumb" data-index="2"></canvas>
-          </div>
+    .nav-btn:active {
+      transform: translateZ(0) scale(0.95);
+    }
 
-          <div class="text-area">
-            <input
-              id="eventText"
-              type="text"
-              placeholder="Judul acara / tanggal / #hashtag"
-            />
-          </div>
+    .nav-btn i {
+      font-size: 20px;
+      transition: transform 0.3s ease;
+    }
+
+    .nav-btn:hover i {
+      transform: translateX(5px);
+    }
+
+    .nav-btn::before {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      border-radius: 50px;
+      background: linear-gradient(135deg, #8f7cf7 0%, #8659c7 100%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      z-index: -1;
+    }
+
+    .nav-btn:hover::before {
+      opacity: 1;
+    }
+
+    @media (max-width: 640px) {
+      .floating-nav {
+        right: 20px;
+        bottom: 20px;
+      }
+      
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="floating-nav">
+    <a href="send-email.html" class="nav-btn">
+      <span>Kirim via Email</span>
+      <i class="fas fa-paper-plane"></i>
+    </a>
+  </div>
+  <div class="wrap">
+    <header>
+      <h1>Photobooth Strip — 5 × 15 cm (300 DPI)</h1>
+      <p class="lead">
+        3 bingkai vertikal di bagian atas + area tulisan di bawah. Margin
+        putih aman sudah disiapkan.
+      </p>
+    </header>
+
+    <div class="controls">
+      <button id="startAuto" class="btn-primary">Mulai Otomatis (3×10s)</button>
+      <button id="resetAll">Reset Photo</button>
+
+      <button id="chooseTemplateBtn">Ganti Template</button>
+      <input id="templateInput" type="file" accept="image/png" />
+
+      <button id="generateBtn">Generate</button>
+      <button id="downloadBtn">
+        <span id="downloadText">Download PNG</span>
+        <div id="loadingSpinner" class="d-none spinner-border spinner-border-sm ms-2"
+          style="color: #7c3aed !important; vertical-align: middle;" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </button>
+
+      <button id="downloadPdfBtn">Download PDF</button>
+      <button id="printBtn">Print</button>
+    </div>
+
+    <div class="camera-wrap">
+      <div>
+        <div class="video-box">
+          <video id="video" autoplay playsinline></video>
+          <div id="countdown">10</div>
+        </div>
+        <div class="thumbs">
+          <canvas id="thumb0" class="thumb" data-index="0"></canvas>
+          <canvas id="thumb1" class="thumb" data-index="1"></canvas>
+          <canvas id="thumb2" class="thumb" data-index="2"></canvas>
         </div>
 
-        <div class="right-panel">
-          <div class="preview">
-            <h3>Hasil (5×15 cm — 591×1772 px)</h3>
-            <div class="print-area">
-              <canvas
-                id="printCanvas"
-                width="591"
-                height="1772"
-                class="print-canvas"
-              ></canvas>
+        <div class="text-area">
+          <input id="eventText" type="text" placeholder="Judul acara / tanggal / #hashtag" />
+        </div>
+      </div>
+
+      <div class="right-panel">
+        <div class="preview">
+          <h3>Hasil (5×15 cm — 591×1772 px)</h3>
+          <div class="print-area">
+            <canvas id="printCanvas" width="591" height="1772" class="print-canvas"></canvas>
+          </div>
+          <div class="note">
+            Klik <strong>Generate</strong> lalu <strong>Download</strong> atau
+            <strong>Print</strong>.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modals -->
+
+  <!-- Modal List Template -->
+  <div id="templateListModal" class="modal">
+    <div class="modal-content template-modal">
+      <div class="modal-header">
+        <h2 class="modal-title">Pilih Template</h2>
+        <button type="button" class="btn-close close-modal"></button>
+      </div>
+      <div class="modal-body p-0">
+        <div class="template-preview-container row g-0 h-100">
+          <!-- Preview Besar -->
+          <div class="main-preview col-md-8 d-flex flex-column p-4 border-end">
+            <div class="flex-grow-1 d-flex align-items-center justify-content-center">
+              <img id="mainPreview" src="" alt="Template Preview" class="w-100">
             </div>
-            <div class="note">
-              Klik <strong>Generate</strong> lalu <strong>Download</strong> atau
-              <strong>Print</strong>.
+
+            <div class="preview-info mt-4 text-center">
+              <h3 id="templateName" class="mb-3">Nama Template</h3>
+              <button id="useTemplateBtn" class="btn-primary">Gunakan Template Ini</button>
+            </div>
+          </div>
+
+          <!-- Grid Template -->
+          <div class="template-grid-sidebar col-md-4 d-flex flex-column p-4">
+            <div class="template-grid row row-cols-2 g-3 flex-grow-1 overflow-auto" id="templateGrid">
+              <!-- Template thumbnails akan diisi oleh JavaScript -->
+            </div>
+
+            <div class="mt-4">
+              <button id="viewAllTemplatesBtn" class="btn-secondary">Lihat Semua Template</button>
             </div>
           </div>
         </div>
       </div>
     </div>
-    
-    <script src="script.js"></script>
-  </body>
+  </div>
+
+  <!-- Modal Semua Template -->
+  <div id="allTemplatesModal" class="modal">
+    <div class="modal-dialog modal-dialog-centered all-templates-modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 class="modal-title">Semua Template</h2>
+          <button type="button" class="btn-close close-modal"></button>
+        </div>
+
+        <div class="modal-body p-0">
+          <div class="all-templates-grid row row-cols-5 g-3 p-4" id="allTemplatesGrid">
+            <!-- Semua template thumbnails -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal preview image -->
+  <div id="modalPreviewImage" class="modal fade" tabindex="-1">
+    <div class="modal-dialog modal-xl photo-preview-modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Preview Foto</h5>
+
+          <!-- Action Buttons -->
+          <div class="d-flex ms-auto align-items-center">
+            <button id="deletePhotoBtn" class="btn btn-danger me-2"><i class="fas fa-trash"></i> Hapus Foto</button>
+            <button type="button" class="btn-close close-modal" data-bs-dismiss="modal"></button>
+          </div>
+        </div>
+
+        <div class="modal-body p-0">
+          <div class="row g-0 h-100">
+            <!-- Main Image Area -->
+            <div class="col-md-8 position-relative">
+              <div class="main-image-container p-3">
+                <img id="previewImage" class="main-image" src="" alt="Preview Foto">
+
+                <!-- Carousel Buttons -->
+                <button id="prevBtn" class="carousel-btn prev hidden">
+                  <i class="fas fa-chevron-left"></i>
+                </button>
+                <button id="nextBtn" class="carousel-btn next hidden">
+                  <i class="fas fa-chevron-right"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Photo Sidebar -->
+            <div class="col-md-4 border-start">
+              <div class="photo-sidebar p-3">
+                <div class="row g-3" id="photoSidebar">
+                  <!-- Photo thumbnails akan diisi oleh JavaScript -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <a href="send-email.html">
+        <button>Kirim via Email</button>
+      </a>
+    </div>
+  </div>
+  
+
+  <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script> -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="assets/script.js"></script>
+</body>
+
 </html>

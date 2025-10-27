@@ -4,6 +4,7 @@
   --muted: #64748b;
   --accent: #7c3aed;
 }
+
 body {
   margin: 0;
   font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
@@ -46,11 +47,30 @@ button {
   cursor: pointer;
   font-weight: 600;
 }
-button.primary {
+
+.btn-primary {
   background: var(--accent);
   color: white;
   border: none;
 }
+
+.btn-secondary {
+  border: 2px solid var(--accent);
+  color: var(--accent);
+  background: transparent;
+}
+
+.btn-secondary:hover {
+  border: 2px solid var(--accent);
+  color: var(--accent);
+  background: var(--bg);
+}
+
+.btn-secondary:active {
+  border: 2px solid var(--accent);
+  scale: 0.98;
+}
+
 input[type="file"] {
   display: none;
 }
