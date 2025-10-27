@@ -9,9 +9,87 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <link rel="stylesheet" href="assets/style.css" />
   <link rel="stylesheet" href="assets/modals.css">
+  <style>
+    .floating-nav {
+      position: fixed;
+      right: 30px;
+      bottom: 30px;
+      z-index: 1000;
+      transform-style: preserve-3d;
+      perspective: 1000px;
+    }
+
+    .nav-btn {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 32px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: none;
+      border-radius: 50px;
+      color: white;
+      font-weight: 600;
+      text-decoration: none;
+      font-size: 16px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 10px 25px -5px rgba(102, 126, 234, 0.5);
+      transform: translateZ(0);
+    }
+
+    .nav-btn:hover {
+      transform: translateZ(20px) scale(1.05);
+      box-shadow: 0 20px 35px -10px rgba(102, 126, 234, 0.6);
+    }
+
+    .nav-btn:active {
+      transform: translateZ(0) scale(0.95);
+    }
+
+    .nav-btn i {
+      font-size: 20px;
+      transition: transform 0.3s ease;
+    }
+
+    .nav-btn:hover i {
+      transform: translateX(5px);
+    }
+
+    .nav-btn::before {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      border-radius: 50px;
+      background: linear-gradient(135deg, #8f7cf7 0%, #8659c7 100%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      z-index: -1;
+    }
+
+    .nav-btn:hover::before {
+      opacity: 1;
+    }
+
+    @media (max-width: 640px) {
+      .floating-nav {
+        right: 20px;
+        bottom: 20px;
+      }
+      
+      .nav-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+      }
+    }
+  </style>
 </head>
 
 <body>
+  <div class="floating-nav">
+    <a href="send-email.html" class="nav-btn">
+      <span>Kirim via Email</span>
+      <i class="fas fa-paper-plane"></i>
+    </a>
+  </div>
   <div class="wrap">
     <header>
       <h1>Photobooth Strip — 5 × 15 cm (300 DPI)</h1>

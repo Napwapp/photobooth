@@ -326,7 +326,7 @@ async function autoCapture() {
   photos = [null, null, null];
   THUMBS.forEach((c) => c.getContext("2d").clearRect(0, 0, c.width, c.height));
   for (let i = 0; i < 3; i++) {
-    await countdownTimer(3);
+    await countdownTimer(10);
     const c = document.createElement("canvas");
     c.width = VIDEO.videoWidth || 1280;
     c.height = VIDEO.videoHeight || 720;
